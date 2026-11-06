@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "TargetType": {
+      "description": "Correction target entity types.",
+      "enum": [
+        "PHASE_BOUNDARY",
+        "PHASE_LABEL",
+        "KEY_EVENT",
+        "TOOL_INTERVAL",
+        "METRIC",
+        "REPORT_NOTE"
+      ],
+      "title": "TargetType",
+      "type": "string"
+    }
+  },
+  "description": "Append-only correction record proposed by expert reviewer (P6).",
+  "properties": {
+    "after": {
+      "additionalProperties": true,
+      "description": "Corrected state",
+      "title": "After",
+      "type": "object"
+    },
+    "author_id": {
+      "description": "Author user UUID",
+      "title": "Author Id",
+      "type": "string"
+    },
+    "before": {
+      "additionalProperties": true,
+      "description": "State before correction",
+      "title": "Before",
+      "type": "object"
+    },
+    "created_at": {
+      "description": "ISO 8601 creation timestamp",
+      "title": "Created At",
+      "type": "string"
+    },
+    "id": {
+      "description": "Unique correction UUID",
+      "title": "Id",
+      "type": "string"
+    },
+    "reason": {
+      "description": "Clinical justification for change",
+      "title": "Reason",
+      "type": "string"
+    },
+    "report_id": {
+      "description": "Target report UUID",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "target_ref": {
+      "description": "Identifier of target entity or phase index",
+      "title": "Target Ref",
+      "type": "string"
+    },
+    "target_type": {
+      "$ref": "#/$defs/TargetType",
+      "description": "Entity type being corrected"
+    }
+  },
+  "required": [
+    "id",
+    "report_id",
+    "author_id",
+    "target_type",
+    "target_ref",
+    "before",
+    "after",
+    "reason",
+    "created_at"
+  ],
+  "title": "Correction",
+  "type": "object"
+}

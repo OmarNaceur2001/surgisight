@@ -1,0 +1,66 @@
+{
+  "$defs": {
+    "TimeInterval": {
+      "description": "Half-open interval [start, end) in seconds.",
+      "properties": {
+        "end": {
+          "description": "End time in seconds (exclusive)",
+          "exclusiveMinimum": 0.0,
+          "title": "End",
+          "type": "number"
+        },
+        "start": {
+          "description": "Start time in seconds (inclusive)",
+          "minimum": 0.0,
+          "title": "Start",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeInterval",
+      "type": "object"
+    },
+    "ToolId": {
+      "description": "Seven surgical instruments tracked in cholecystectomy.",
+      "enum": [
+        "Grasper",
+        "Bipolar",
+        "Hook",
+        "Scissors",
+        "Clipper",
+        "Irrigator",
+        "SpecimenBag"
+      ],
+      "title": "ToolId",
+      "type": "string"
+    }
+  },
+  "description": "Spatial-temporal track of an instrument across half-open time intervals.",
+  "properties": {
+    "intervals": {
+      "description": "Active presence time intervals [start, end)",
+      "items": {
+        "$ref": "#/$defs/TimeInterval"
+      },
+      "title": "Intervals",
+      "type": "array"
+    },
+    "tool": {
+      "$ref": "#/$defs/ToolId"
+    },
+    "track_id": {
+      "minimum": 0,
+      "title": "Track Id",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "track_id",
+    "tool"
+  ],
+  "title": "Track",
+  "type": "object"
+}

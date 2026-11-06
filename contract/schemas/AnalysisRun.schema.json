@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "RunStatus": {
+      "description": "Analysis run status in pipeline.",
+      "enum": [
+        "PENDING",
+        "PROCESSING",
+        "COMPLETED",
+        "FAILED"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "description": "Analysis job execution state tracked in DB and worker.",
+  "properties": {
+    "config_hash": {
+      "title": "Config Hash",
+      "type": "string"
+    },
+    "contract_version": {
+      "default": "1.0",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finished At"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "model_versions": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Model Versions",
+      "type": "object"
+    },
+    "progress": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Progress",
+      "type": "number"
+    },
+    "stage": {
+      "default": "init",
+      "title": "Stage",
+      "type": "string"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Started At"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus",
+      "default": "PENDING"
+    },
+    "video_id": {
+      "title": "Video Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "video_id",
+    "config_hash",
+    "idempotency_key"
+  ],
+  "title": "AnalysisRun",
+  "type": "object"
+}

@@ -1,0 +1,204 @@
+{
+  "$defs": {
+    "PhaseId": {
+      "description": "Surgical phases for laparoscopic cholecystectomy (P1..P7).",
+      "enum": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "title": "PhaseId",
+      "type": "string"
+    },
+    "PhasePrediction": {
+      "description": "Phase prediction for a single time step.",
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/PhaseId",
+          "description": "Predicted phase ID (P1..P7)"
+        },
+        "probs": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Calibrated probabilities across all 7 phases",
+          "propertyNames": {
+            "$ref": "#/$defs/PhaseId"
+          },
+          "title": "Probs",
+          "type": "object"
+        }
+      },
+      "required": [
+        "label",
+        "probs"
+      ],
+      "title": "PhasePrediction",
+      "type": "object"
+    },
+    "ProducerInfo": {
+      "description": "Metadata of the module producing the record/file.",
+      "properties": {
+        "name": {
+          "description": "Module or service name",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "description": "Semantic or git version",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ProducerInfo",
+      "type": "object"
+    },
+    "ToolId": {
+      "description": "Seven surgical instruments tracked in cholecystectomy.",
+      "enum": [
+        "Grasper",
+        "Bipolar",
+        "Hook",
+        "Scissors",
+        "Clipper",
+        "Irrigator",
+        "SpecimenBag"
+      ],
+      "title": "ToolId",
+      "type": "string"
+    },
+    "ToolPresencePrediction": {
+      "description": "Presence probabilities for the 7 tracked surgical instruments.",
+      "properties": {
+        "probs": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Presence probability for each of the 7 instruments [0..1]",
+          "propertyNames": {
+            "$ref": "#/$defs/ToolId"
+          },
+          "title": "Probs",
+          "type": "object"
+        }
+      },
+      "required": [
+        "probs"
+      ],
+      "title": "ToolPresencePrediction",
+      "type": "object"
+    },
+    "TripletPrediction": {
+      "description": "Action triplet <instrument, verb, target> prediction.",
+      "properties": {
+        "ivt_id": {
+          "description": "Official numeric identifier",
+          "minimum": 0,
+          "title": "Ivt Id",
+          "type": "integer"
+        },
+        "ivt_name": {
+          "description": "Human-readable triplet string, e.g., 'grasper,grasp,gallbladder'",
+          "title": "Ivt Name",
+          "type": "string"
+        },
+        "score": {
+          "description": "Prediction confidence score",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ivt_id",
+        "ivt_name",
+        "score"
+      ],
+      "title": "TripletPrediction",
+      "type": "object"
+    }
+  },
+  "description": "1 Hz primary synchronized analysis record.\n\nPrimary key is `t` (seconds from video start, float rounded to 2 decimals).",
+  "properties": {
+    "frame_idx": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Original 25 FPS frame index (optional)",
+      "title": "Frame Idx"
+    },
+    "phase": {
+      "$ref": "#/$defs/PhasePrediction",
+      "description": "Phase prediction and probabilities"
+    },
+    "producer": {
+      "$ref": "#/$defs/ProducerInfo",
+      "description": "Module/version that emitted this record"
+    },
+    "quality_flags": {
+      "description": "Optical quality alerts (smoke, blur, etc.)",
+      "items": {
+        "enum": [
+          "normal",
+          "motion_blur",
+          "smoke",
+          "blood_on_lens",
+          "underexposed",
+          "overexposed",
+          "out_of_body"
+        ],
+        "type": "string"
+      },
+      "title": "Quality Flags",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "description": "Contract version (1.0)",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "t": {
+      "description": "Time in seconds from video start",
+      "minimum": 0.0,
+      "title": "T",
+      "type": "number"
+    },
+    "tools": {
+      "$ref": "#/$defs/ToolPresencePrediction",
+      "description": "Tool presence probabilities"
+    },
+    "triplets": {
+      "description": "Top triplet predictions at time t",
+      "items": {
+        "$ref": "#/$defs/TripletPrediction"
+      },
+      "title": "Triplets",
+      "type": "array"
+    }
+  },
+  "required": [
+    "producer",
+    "t",
+    "phase",
+    "tools"
+  ],
+  "title": "PerSecondRecord",
+  "type": "object"
+}

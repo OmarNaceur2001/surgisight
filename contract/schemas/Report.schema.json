@@ -1,0 +1,415 @@
+{
+  "$defs": {
+    "Deviation": {
+      "description": "Observed deviation from reference cohort statistics (neutral phrasing, P3).",
+      "properties": {
+        "cohort_n": {
+          "default": 0,
+          "description": "Cohort sample size",
+          "minimum": 0,
+          "title": "Cohort N",
+          "type": "integer"
+        },
+        "cohort_p95_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "95th percentile observed in reference cohort",
+          "title": "Cohort P95 S"
+        },
+        "phase": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhaseId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Associated phase if applicable"
+        },
+        "type": {
+          "description": "Deviation type, e.g. 'phase_duration'",
+          "title": "Type",
+          "type": "string"
+        },
+        "value_s": {
+          "description": "Observed duration/value in seconds",
+          "title": "Value S",
+          "type": "number"
+        },
+        "wording": {
+          "description": "Neutral wording strictly conforming to wording_lexicon.yaml (P3)",
+          "title": "Wording",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value_s",
+        "wording"
+      ],
+      "title": "Deviation",
+      "type": "object"
+    },
+    "KeyEvent": {
+      "description": "Discrete key clinical event detected on the surgical timeline.",
+      "properties": {
+        "conf": {
+          "description": "Calibrated event confidence",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Conf",
+          "type": "number"
+        },
+        "evidence": {
+          "description": "Traceable evidence items (e.g. tool presence, triplets)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "t": {
+          "description": "Timestamp in seconds",
+          "minimum": 0.0,
+          "title": "T",
+          "type": "number"
+        },
+        "type": {
+          "description": "Event identifier, e.g. 'first_clip'",
+          "title": "Type",
+          "type": "string"
+        },
+        "uncertain": {
+          "default": false,
+          "description": "Flagged uncertain if below threshold",
+          "title": "Uncertain",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "t",
+        "conf"
+      ],
+      "title": "KeyEvent",
+      "type": "object"
+    },
+    "PhaseId": {
+      "description": "Surgical phases for laparoscopic cholecystectomy (P1..P7).",
+      "enum": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7"
+      ],
+      "title": "PhaseId",
+      "type": "string"
+    },
+    "PhaseSegment": {
+      "description": "Continuous phase segment [start, end) on the operative timeline.",
+      "properties": {
+        "conf": {
+          "description": "Minimum calibrated confidence over segment evidence",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Conf",
+          "type": "number"
+        },
+        "end": {
+          "description": "End second (exclusive)",
+          "exclusiveMinimum": 0.0,
+          "title": "End",
+          "type": "number"
+        },
+        "label": {
+          "$ref": "#/$defs/PhaseId",
+          "description": "Phase ID (P1..P7)"
+        },
+        "name": {
+          "description": "Official phase name",
+          "title": "Name",
+          "type": "string"
+        },
+        "start": {
+          "description": "Start second (inclusive)",
+          "minimum": 0.0,
+          "title": "Start",
+          "type": "number"
+        },
+        "uncertain": {
+          "default": false,
+          "description": "Flagged uncertain if conf < calibrated threshold",
+          "title": "Uncertain",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
+        "name",
+        "start",
+        "end",
+        "conf"
+      ],
+      "title": "PhaseSegment",
+      "type": "object"
+    },
+    "ProducerInfo": {
+      "description": "Metadata of the module producing the record/file.",
+      "properties": {
+        "name": {
+          "description": "Module or service name",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "description": "Semantic or git version",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ProducerInfo",
+      "type": "object"
+    },
+    "ReportStatus": {
+      "description": "Operative report review status.",
+      "enum": [
+        "DRAFT_PENDING_REVIEW",
+        "REVIEWED"
+      ],
+      "title": "ReportStatus",
+      "type": "string"
+    },
+    "ToolId": {
+      "description": "Seven surgical instruments tracked in cholecystectomy.",
+      "enum": [
+        "Grasper",
+        "Bipolar",
+        "Hook",
+        "Scissors",
+        "Clipper",
+        "Irrigator",
+        "SpecimenBag"
+      ],
+      "title": "ToolId",
+      "type": "string"
+    },
+    "ToolUsage": {
+      "description": "Cumulative usage statistics for a surgical instrument.",
+      "properties": {
+        "pct": {
+          "description": "Percentage of total video duration (Note: does NOT sum to 100% across tools)",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "title": "Pct",
+          "type": "number"
+        },
+        "tool": {
+          "$ref": "#/$defs/ToolId"
+        },
+        "usage_s": {
+          "description": "Total active duration in seconds",
+          "minimum": 0.0,
+          "title": "Usage S",
+          "type": "number"
+        }
+      },
+      "required": [
+        "tool",
+        "usage_s",
+        "pct"
+      ],
+      "title": "ToolUsage",
+      "type": "object"
+    },
+    "TripletHighlight": {
+      "description": "Key action triplet highlight for summary and report.",
+      "properties": {
+        "ivt_id": {
+          "title": "Ivt Id",
+          "type": "integer"
+        },
+        "ivt_name": {
+          "title": "Ivt Name",
+          "type": "string"
+        },
+        "phase": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhaseId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "t": {
+          "minimum": 0.0,
+          "title": "T",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ivt_id",
+        "ivt_name",
+        "t",
+        "score"
+      ],
+      "title": "TripletHighlight",
+      "type": "object"
+    }
+  },
+  "description": "Operative Report schema (M6 / JSON source of truth, P4).\n\nEvery figure appearing in the PDF must trace directly to this schema.",
+  "properties": {
+    "confidence_notes": {
+      "description": "Calibrated confidence explanations",
+      "items": {
+        "type": "string"
+      },
+      "title": "Confidence Notes",
+      "type": "array"
+    },
+    "cvs": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Critical View of Safety assessment (Stage 2 stub)",
+      "title": "Cvs"
+    },
+    "dataset": {
+      "description": "Source dataset name, e.g. 'cholec80'",
+      "title": "Dataset",
+      "type": "string"
+    },
+    "deviations": {
+      "description": "Reference cohort statistical deviations",
+      "items": {
+        "$ref": "#/$defs/Deviation"
+      },
+      "title": "Deviations",
+      "type": "array"
+    },
+    "disclaimer": {
+      "default": "Research prototype \u2014 not for clinical use",
+      "description": "Mandatory research use only disclaimer (P1)",
+      "title": "Disclaimer",
+      "type": "string"
+    },
+    "duration_s": {
+      "description": "Total video duration in seconds",
+      "exclusiveMinimum": 0.0,
+      "title": "Duration S",
+      "type": "number"
+    },
+    "events": {
+      "description": "Detected key surgical events",
+      "items": {
+        "$ref": "#/$defs/KeyEvent"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "models": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Version dictionary of inference models used",
+      "title": "Models",
+      "type": "object"
+    },
+    "phases": {
+      "description": "Phase segments that tile [0, duration_s)",
+      "items": {
+        "$ref": "#/$defs/PhaseSegment"
+      },
+      "title": "Phases",
+      "type": "array"
+    },
+    "producer": {
+      "$ref": "#/$defs/ProducerInfo"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ReportStatus",
+      "default": "DRAFT_PENDING_REVIEW",
+      "description": "Report review lifecycle status"
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "AI-generated textual summary (Stage 2)",
+      "title": "Summary"
+    },
+    "tools": {
+      "description": "Per-tool usage duration and percentage",
+      "items": {
+        "$ref": "#/$defs/ToolUsage"
+      },
+      "title": "Tools",
+      "type": "array"
+    },
+    "triplet_highlights": {
+      "description": "Prominent action triplets",
+      "items": {
+        "$ref": "#/$defs/TripletHighlight"
+      },
+      "title": "Triplet Highlights",
+      "type": "array"
+    },
+    "video_id": {
+      "description": "Unique video identifier",
+      "title": "Video Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "producer",
+    "video_id",
+    "dataset",
+    "duration_s",
+    "phases",
+    "tools"
+  ],
+  "title": "Report",
+  "type": "object"
+}

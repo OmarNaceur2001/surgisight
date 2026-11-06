@@ -1,0 +1,54 @@
+{
+  "description": "Normalized video metadata extracted during ingest.",
+  "properties": {
+    "crop_offset": {
+      "description": "Black-border crop coordinates [x, y, cropped_width, cropped_height]",
+      "items": {
+        "type": "integer"
+      },
+      "title": "Crop Offset",
+      "type": "array"
+    },
+    "duration_s": {
+      "exclusiveMinimum": 0.0,
+      "title": "Duration S",
+      "type": "number"
+    },
+    "fps": {
+      "exclusiveMinimum": 0.0,
+      "title": "Fps",
+      "type": "number"
+    },
+    "frame_count": {
+      "minimum": 0,
+      "title": "Frame Count",
+      "type": "integer"
+    },
+    "height": {
+      "exclusiveMinimum": 0,
+      "title": "Height",
+      "type": "integer"
+    },
+    "source": {
+      "description": "Filename or source identifier",
+      "title": "Source",
+      "type": "string"
+    },
+    "width": {
+      "exclusiveMinimum": 0,
+      "title": "Width",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "fps",
+    "duration_s",
+    "width",
+    "height",
+    "crop_offset",
+    "source",
+    "frame_count"
+  ],
+  "title": "VideoMeta",
+  "type": "object"
+}

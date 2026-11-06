@@ -1,0 +1,97 @@
+{
+  "$defs": {
+    "ProducerInfo": {
+      "description": "Metadata of the module producing the record/file.",
+      "properties": {
+        "name": {
+          "description": "Module or service name",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "description": "Semantic or git version",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ProducerInfo",
+      "type": "object"
+    },
+    "ToolId": {
+      "description": "Seven surgical instruments tracked in cholecystectomy.",
+      "enum": [
+        "Grasper",
+        "Bipolar",
+        "Hook",
+        "Scissors",
+        "Clipper",
+        "Irrigator",
+        "SpecimenBag"
+      ],
+      "title": "ToolId",
+      "type": "string"
+    }
+  },
+  "description": "5 Hz spatial tool detection record with bounding box.",
+  "properties": {
+    "bbox": {
+      "description": "Bounding box [x1, y1, x2, y2] in cropped frame pixels",
+      "items": {
+        "type": "number"
+      },
+      "title": "Bbox",
+      "type": "array"
+    },
+    "producer": {
+      "$ref": "#/$defs/ProducerInfo"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "score": {
+      "description": "Detection confidence",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Score",
+      "type": "number"
+    },
+    "t": {
+      "description": "Time in seconds from video start",
+      "minimum": 0.0,
+      "title": "T",
+      "type": "number"
+    },
+    "tool": {
+      "$ref": "#/$defs/ToolId",
+      "description": "Detected surgical instrument"
+    },
+    "track_id": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Trajectory track identifier if linked by tracker",
+      "title": "Track Id"
+    }
+  },
+  "required": [
+    "producer",
+    "t",
+    "tool",
+    "bbox",
+    "score"
+  ],
+  "title": "DetectionRecord",
+  "type": "object"
+}

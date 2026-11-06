@@ -1,0 +1,93 @@
+"""SurgiSight Data Contract v1.0 package.
+
+Public interface for data models, types, palettes, and mock generators.
+"""
+
+from __future__ import annotations
+
+from surgisight.contract.mock_generator import MockAnalysisResult, generate_mock_analysis
+from surgisight.contract.models import (
+    AnalysisRun,
+    Correction,
+    DetectionRecord,
+    Deviation,
+    KeyEvent,
+    PerSecondRecord,
+    PhasePrediction,
+    PhaseSegment,
+    ProducerInfo,
+    Report,
+    StreamMessage,
+    TimeInterval,
+    ToolPresencePrediction,
+    ToolUsage,
+    Track,
+    TripletHighlight,
+    TripletPrediction,
+    VideoMeta,
+    frame_idx_to_seconds,
+    seconds_to_frame_idx,
+    validate_interval_tiling,
+)
+from surgisight.contract.palette import (
+    PHASE_PALETTE,
+    TOOL_PALETTE,
+    UNCERTAINTY_STYLE,
+    get_palette_export,
+)
+from surgisight.contract.types import (
+    CONTRACT_VERSION,
+    PHASE_NAMES,
+    PHASE_ORDER,
+    RESEARCH_DISCLAIMER,
+    TOOL_ORDER,
+    PhaseId,
+    QualityFlag,
+    ReportStatus,
+    RunStatus,
+    TargetType,
+    ToolId,
+    UserRole,
+)
+
+__all__ = [
+    "CONTRACT_VERSION",
+    "PHASE_NAMES",
+    "PHASE_ORDER",
+    "PHASE_PALETTE",
+    "RESEARCH_DISCLAIMER",
+    "TOOL_ORDER",
+    "TOOL_PALETTE",
+    "UNCERTAINTY_STYLE",
+    "AnalysisRun",
+    "Correction",
+    "DetectionRecord",
+    "Deviation",
+    "KeyEvent",
+    "MockAnalysisResult",
+    "PerSecondRecord",
+    "PhaseId",
+    "PhasePrediction",
+    "PhaseSegment",
+    "ProducerInfo",
+    "QualityFlag",
+    "Report",
+    "ReportStatus",
+    "RunStatus",
+    "StreamMessage",
+    "TargetType",
+    "TimeInterval",
+    "ToolId",
+    "ToolPresencePrediction",
+    "ToolUsage",
+    "Track",
+    "TripletHighlight",
+    "TripletPrediction",
+    "UserRole",
+    "VideoMeta",
+    "frame_idx_to_seconds",
+    "generate_mock_analysis",
+    "get_palette_export",
+    "seconds_to_frame_idx",
+    "validate_interval_tiling",
+]

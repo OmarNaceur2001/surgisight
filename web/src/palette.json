@@ -1,0 +1,90 @@
+{
+  "phases": {
+    "P1": {
+      "hex": "#4E79A7",
+      "light_rgba": "rgba(78, 121, 167, 0.25)",
+      "name": "Preparation",
+      "rgba": "rgba(78, 121, 167, 0.85)",
+      "text": "#FFFFFF"
+    },
+    "P2": {
+      "hex": "#F28E2B",
+      "light_rgba": "rgba(242, 142, 43, 0.25)",
+      "name": "Calot triangle dissection",
+      "rgba": "rgba(242, 142, 43, 0.85)",
+      "text": "#000000"
+    },
+    "P3": {
+      "hex": "#E15759",
+      "light_rgba": "rgba(225, 87, 89, 0.25)",
+      "name": "Clipping and cutting",
+      "rgba": "rgba(225, 87, 89, 0.85)",
+      "text": "#FFFFFF"
+    },
+    "P4": {
+      "hex": "#76B7B2",
+      "light_rgba": "rgba(118, 183, 178, 0.25)",
+      "name": "Gallbladder dissection",
+      "rgba": "rgba(118, 183, 178, 0.85)",
+      "text": "#000000"
+    },
+    "P5": {
+      "hex": "#59A14F",
+      "light_rgba": "rgba(89, 161, 79, 0.25)",
+      "name": "Gallbladder packaging",
+      "rgba": "rgba(89, 161, 79, 0.85)",
+      "text": "#FFFFFF"
+    },
+    "P6": {
+      "hex": "#EDC948",
+      "light_rgba": "rgba(237, 201, 72, 0.25)",
+      "name": "Cleaning and coagulation",
+      "rgba": "rgba(237, 201, 72, 0.85)",
+      "text": "#000000"
+    },
+    "P7": {
+      "hex": "#B07AA1",
+      "light_rgba": "rgba(176, 122, 161, 0.25)",
+      "name": "Gallbladder retraction",
+      "rgba": "rgba(176, 122, 161, 0.85)",
+      "text": "#FFFFFF"
+    }
+  },
+  "tools": {
+    "Bipolar": {
+      "hex": "#FDAE61",
+      "rgba": "rgba(253, 174, 97, 0.85)"
+    },
+    "Clipper": {
+      "hex": "#9E0142",
+      "rgba": "rgba(158, 1, 66, 0.85)"
+    },
+    "Grasper": {
+      "hex": "#2B83BA",
+      "rgba": "rgba(43, 131, 186, 0.85)"
+    },
+    "Hook": {
+      "hex": "#D7191C",
+      "rgba": "rgba(215, 25, 28, 0.85)"
+    },
+    "Irrigator": {
+      "hex": "#5E4FA2",
+      "rgba": "rgba(94, 79, 162, 0.85)"
+    },
+    "Scissors": {
+      "hex": "#ABDDA4",
+      "rgba": "rgba(171, 221, 164, 0.85)"
+    },
+    "SpecimenBag": {
+      "hex": "#66C2A5",
+      "rgba": "rgba(102, 194, 165, 0.85)"
+    }
+  },
+  "uncertainty": {
+    "hatch": "///",
+    "label": "uncertain",
+    "pattern_color": "rgba(0, 0, 0, 0.35)",
+    "stroke_color": "#D32F2F",
+    "stroke_width": 2
+  }
+}
