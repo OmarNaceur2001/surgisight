@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "surgisight"
+version = "0.1.0"
+description = "AI surgical video copilot — research prototype, not for clinical use"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["surgisight*"]
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["surgisight", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.ruff.lint.isort]
+known-first-party = ["surgisight"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ---------------------------------------------------------------------------
+# Black
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+# ---------------------------------------------------------------------------
+# Mypy
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+# Be strict only on our typed modules
+[[tool.mypy.overrides]]
+module = ["surgisight.contract.*", "surgisight.analytics.*", "surgisight.report.*"]
+disallow_untyped_defs = true
+disallow_any_generics = true
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --tb=short"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "ffmpeg: requires ffmpeg on PATH",
+    "postgres: requires a live PostgreSQL instance",
+    "slow: slow tests (> 5 s)",
+]
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["surgisight"]
+omit = ["*/tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+fail_under = 0  # will be raised at WP12
+show_missing = true

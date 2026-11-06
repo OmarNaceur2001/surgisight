@@ -1,0 +1,30 @@
+# Pre-commit hooks for SurgiSight
+# Run: pre-commit install
+# Manual check: pre-commit run --all-files
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.3
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/psf/black
+    rev: 26.10.1
+    hooks:
+      - id: black
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
+
+  # Local data-guard hook (P2 — no media/weights/archives in git)
+  - repo: local
+    hooks:
+      - id: data-guard
+        name: Data Guard (no media/weights/archives > 5 MB)
+        entry: python scripts/data_guard.py
+        language: python
+        pass_filenames: true
+        types: [file]

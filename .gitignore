@@ -1,19 +1,66 @@
-.venv/
-__pycache__/
-node_modules/
+# Virtual environments
+.venv*/
+
+# IDE / tools
+.qodo/
 .env
+.env.*
+!.env.example
 
-data_raw/
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
 
+# Node
+node_modules/
+dist/
+.vite/
+
+# Storage (never commit media or model artifacts)
+storage/
+surgisight/models/artifacts/
+SurgiSight_workdir/
+
+# Media / dataset files (P2 guard)
 *.mp4
 *.avi
 *.mkv
-
-*.npy
-*.h5
-
+*.mov
+*.webm
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
 *.pt
 *.pth
-
+*.npy
+*.h5
+*.hdf5
+*.pkl
+*.bin
 frames*/
-embeddings/
+embeddings*/
+
+# Notebook outputs (nbstripout handles this, belt-and-suspenders)
+*.ipynb checkpoints/
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Alembic
+alembic/versions/*.pyc
