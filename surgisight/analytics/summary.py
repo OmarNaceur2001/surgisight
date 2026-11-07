@@ -40,7 +40,11 @@ def _allowed_numbers(report: Report) -> set[Decimal]:
         values.extend((event.t, event.conf))
     for triplet in report.triplet_highlights:
         values.extend((triplet.ivt_id, triplet.t, triplet.score))
-    return {_decimal_token(value) for value in values}
+    normalized: set[Decimal] = set()
+    for value in values:
+        normalized.add(_decimal_token(value))
+        normalized.add(_decimal_token(round(float(value), 2)))
+    return normalized
 
 
 def fact_check_summary(summary: str, report: Report) -> SummaryCheck:
