@@ -12,16 +12,16 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from surgisight.analytics.lexicon import validate_object_lexicon
 from surgisight.api.auth import decode_token
 from surgisight.api.deps import get_current_user, record_access_log
-from surgisight.analytics.lexicon import validate_object_lexicon
 from surgisight.contract.models import (
     PerSecondRecord,
     PhasePrediction,
     ProducerInfo,
+    Report,
     StreamMessage,
     ToolPresencePrediction,
-    Report,
 )
 from surgisight.contract.types import CONTRACT_VERSION, PHASE_ORDER, TOOL_ORDER, PhaseId
 from surgisight.data.video import extract_frames
@@ -29,6 +29,7 @@ from surgisight.db import (
     AnalysisRunModel,
     CohortStatsModel,
     ReportModel,
+    SyncSessionLocal,
     UserModel,
     VideoModel,
     get_db,
@@ -183,7 +184,7 @@ async def replay_session(websocket: WebSocket, session_id: str) -> None:
         )
     except WebSocketDisconnect:
         return
-    except asyncio.TimeoutError:
+    except TimeoutError:
         await websocket.close(code=4401, reason="Authentication message timed out.")
     except Exception as exc:
         try:
