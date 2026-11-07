@@ -12,7 +12,12 @@ from sqlalchemy.pool import StaticPool
 from surgisight.api.auth import create_access_token
 from surgisight.api.main import app
 from surgisight.contract.mock_generator import generate_mock_analysis
-from surgisight.contract.models import PerSecondRecord, PhasePrediction, ProducerInfo, ToolPresencePrediction
+from surgisight.contract.models import (
+    PerSecondRecord,
+    PhasePrediction,
+    ProducerInfo,
+    ToolPresencePrediction,
+)
 from surgisight.contract.types import PHASE_ORDER, TOOL_ORDER, PhaseId, ReportStatus
 from surgisight.db import AnalysisRunModel, ReportModel, UserModel, VideoModel, get_db, init_db
 from surgisight.settings import settings
@@ -134,7 +139,7 @@ def test_prediction_slice_returns_bounded_records(api_client, api_db, tmp_path, 
             producer=ProducerInfo(name="fixture", version="1"),
             t=float(second), frame_idx=second * 25,
             phase=PhasePrediction(label=phase, probs={p: (1.0 if p == phase else 0.0) for p in PHASE_ORDER}),
-            tools=ToolPresencePrediction(probs={tool: 0.0 for tool in TOOL_ORDER}),
+            tools=ToolPresencePrediction(probs=dict.fromkeys(TOOL_ORDER, 0.0)),
         ))
     save_1hz_predictions_parquet(run.id, records)
     token = create_access_token(user_id=user.id, role=user.role)
@@ -155,7 +160,7 @@ def test_tool_interval_hysteresis_uses_1hz_probabilities():
     samples = []
     values = [0.1, 0.7, 0.55, 0.35, 0.45, 0.1]
     for value in values:
-        probabilities = {tool: 0.0 for tool in TOOL_ORDER}
+        probabilities = dict.fromkeys(TOOL_ORDER, 0.0)
         probabilities[TOOL_ORDER[0]] = value
         samples.append(ToolPresencePrediction(probs=probabilities))
 
