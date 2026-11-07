@@ -14,7 +14,6 @@ from surgisight.api.auth import decode_token
 from surgisight.api.deps import record_access_log
 from surgisight.contract.models import StreamMessage
 from surgisight.data.video import extract_frames
-from surgisight.models.m2_phase.real_provider import RealPhaseProvider
 from surgisight.db import AnalysisRunModel, UserModel, get_db
 from surgisight.models.m2_phase.real_provider import RealPhaseProvider
 from surgisight.settings import settings

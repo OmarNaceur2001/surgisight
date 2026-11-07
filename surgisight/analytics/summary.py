@@ -8,7 +8,6 @@ from decimal import Decimal, InvalidOperation
 from surgisight.analytics.lexicon import validate_text_lexicon
 from surgisight.contract.models import Report
 
-
 _NUMBER_PATTERN = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?(?![A-Za-z])")
 _PHASE_PATTERN = re.compile(r"\bP[1-7]\b")
 

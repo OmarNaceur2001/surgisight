@@ -16,8 +16,8 @@ from surgisight.api.deps import record_access_log, require_roles
 from surgisight.api.routers import auth, media, videos
 from surgisight.api.routers.analyses import create_router as analyses_create_router
 from surgisight.api.routers.analyses import router as analyses_router
-from surgisight.api.routers.library import router as library_router
 from surgisight.api.routers.cohort import router as cohort_router
+from surgisight.api.routers.library import router as library_router
 from surgisight.api.routers.observability import router as observability_router
 from surgisight.api.routers.reports import router as reports_router
 from surgisight.api.routers.ws import router as websocket_router
