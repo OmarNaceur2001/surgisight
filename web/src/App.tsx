@@ -423,7 +423,7 @@ function App() {
                 <div className="review-main">
                   <section className="panel media-panel">
                     <div className="panel-heading"><div><strong>{selected.global_video_id}</strong><small>{details ? formatDuration(details.duration_s) : s.loading}</small></div><div className="media-actions">{analysis && !replaying && <><button className="secondary" onClick={() => startReplay("saved")}>{s.replay}</button><button className="secondary" onClick={() => startReplay("live")}>{s.liveM2Replay}</button></>}{replaying && <button className="secondary" onClick={stopReplay}>{s.stopReplay}</button>}</div></div>
-                    <video ref={videoRef} controls preload="metadata" src={details?.media_url} />
+                    <video ref={videoRef} controls preload="metadata" src={details ? new URL(details.media_url, apiBaseUrl()).toString() : undefined} />
                     {latestRecord && <div className="stream-status"><span className="live-dot" /> Replay {socketState} · {latestRecord.record.phase.label} · t={latestRecord.record.t.toFixed(0)}s · {latestRecord.latency_ms.toFixed(2)} ms record packaging</div>}
                   </section>
                   {report ? <>

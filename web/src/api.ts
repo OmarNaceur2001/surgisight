@@ -2,7 +2,7 @@
 export type AuthPayload = { access_token: string; token_type: string; expires_in: number };
 let accessToken: string | null = null;
 
-const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://127.0.0.1:8000";
+const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8000";
 
 export function setAccessToken(token: string | null): void {
   accessToken = token;
