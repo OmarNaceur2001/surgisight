@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,13 +36,8 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
     expires_in: int
-
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
 
 
 class RefreshResponse(BaseModel):
@@ -63,6 +58,7 @@ class UserResponse(BaseModel):
 def login(
     req: LoginRequest,
     request: Request,
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
 ) -> TokenResponse:
     """Authenticate user with email and password, issuing access and refresh tokens."""
@@ -97,9 +93,17 @@ def login(
     access_token = create_access_token(user_id=user.id, role=user.role)
     refresh_token = create_refresh_token(user_id=user.id)
 
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        max_age=settings.jwt_refresh_expire_days * 24 * 60 * 60,
+        httponly=True,
+        secure=settings.refresh_cookie_secure,
+        samesite="lax",
+        path="/auth/refresh",
+    )
     return TokenResponse(
         access_token=access_token,
-        refresh_token=refresh_token,
         token_type="bearer",
         expires_in=settings.jwt_access_expire_minutes * 60,
     )
@@ -107,12 +111,14 @@ def login(
 
 @router.post("/refresh", response_model=RefreshResponse)
 def refresh(
-    req: RefreshRequest,
     db: Annotated[Session, Depends(get_db)],
+    refresh_token: Annotated[str | None, Cookie()] = None,
 ) -> RefreshResponse:
-    """Issue a new access token using a valid refresh token."""
+    """Issue a new access token using the HttpOnly refresh cookie."""
+    if not refresh_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing refresh cookie.")
     try:
-        payload = decode_token(req.refresh_token, expected_type="refresh")
+        payload = decode_token(refresh_token, expected_type="refresh")
     except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
