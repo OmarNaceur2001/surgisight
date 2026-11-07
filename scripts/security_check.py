@@ -38,6 +38,13 @@ def main() -> int:
     paths = tracked_paths()
     for path in paths:
         suffix = path.suffix.lower()
+        lowered_path = path.as_posix().lower()
+        if (
+            suffix in {".csv", ".tsv", ".jsonl"}
+            and ("manifest" in path.name.lower() or any(part in {"datasets", "dataset", "raw", "processed"} for part in Path(lowered_path).parts))
+        ):
+            failures.append(f"Dataset manifest/table is not allowed in git: {path}")
+            continue
         if suffix in FORBIDDEN_SUFFIXES:
             failures.append(f"Forbidden tracked file type: {path}")
             continue
