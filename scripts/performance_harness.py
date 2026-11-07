@@ -6,11 +6,22 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
+
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-from surgisight.models.m2_phase.online import OnlinePhasePipeline
+
+
+def create_pipeline(max_buffer_size: int) -> Any:
+    """Import the project pipeline after ensuring the repository root is importable."""
+    sys.path.insert(0, str(ROOT))
+    from surgisight.models.m2_phase.online import OnlinePhasePipeline
+
+    return OnlinePhasePipeline(
+        config={"feature_dim": 64, "temporal_decay": 0.85},
+        max_buffer_size=max_buffer_size,
+    )
 
 def process_rss_bytes() -> int:
     """Return current process RSS using Windows API or Linux procfs."""

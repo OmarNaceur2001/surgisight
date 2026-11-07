@@ -1,5 +1,6 @@
 """Local tracked-file safety scan; reads metadata and text only, never media bytes."""
 from __future__ import annotations
+
 import re
 import subprocess
 from pathlib import Path
@@ -60,10 +61,15 @@ def main() -> int:
                 break
         for match in ASSIGNMENT.finditer(data):
             value = match.group(1).strip()
-            if value and value not in PLACEHOLDERS and not value.startswith("$"):
-                if "example" not in value.lower() and "change_me" not in value.lower():
-                    failures.append(f"Potential hard-coded secret assignment in {path}")
-                    break
+            if (
+                value
+                and value not in PLACEHOLDERS
+                and not value.startswith("$")
+                and "example" not in value.lower()
+                and "change_me" not in value.lower()
+            ):
+                failures.append(f"Potential hard-coded secret assignment in {path}")
+                break
     if failures:
         print("Security check failed:")
         print("\n".join(failures))

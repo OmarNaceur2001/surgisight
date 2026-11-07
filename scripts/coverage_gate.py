@@ -1,5 +1,6 @@
 """Apply package-specific coverage thresholds to coverage.py JSON output."""
 from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
