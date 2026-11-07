@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from surgisight.analytics.lexicon import validate_object_lexicon
+from surgisight.analytics.summary import generate_grounded_summary
 from surgisight.api.deps import get_current_user, record_access_log, require_roles
 from surgisight.contract.models import Report
 from surgisight.contract.types import ReportStatus, TargetType, UserRole
@@ -148,3 +149,47 @@ def review_report(
     reviewed_at = datetime.now(UTC).isoformat()
     record_access_log(db, action=f"review_report:{reviewed_at}", user_id=user.id)
     return ReviewResponse(report_id=report_id, status=row.status, reviewed_at=reviewed_at)
+
+
+
+class SummaryResponse(BaseModel):
+    """Fact-checked summary generated exclusively from report JSON."""
+    label: str
+    summary: str
+    valid: bool
+    checked_numeric_tokens: int
+    reasons: list[str]
+
+
+@router.post("/{report_id}/summary", response_model=SummaryResponse)
+def create_report_summary(
+    report_id: str,
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[UserModel, Depends(get_current_user)],
+) -> SummaryResponse:
+    """Generate and store the deterministic report-grounded summary."""
+    row = _get_report(db, report_id)
+    if row.status == ReportStatus.REVIEWED.value:
+        raise HTTPException(status_code=409, detail="Reviewed reports are read-only")
+    report = Report.model_validate(row.report_json)
+    try:
+        summary, check = generate_grounded_summary(report)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    updated = report.model_copy(update={"summary": summary})
+    row.report_json = updated.model_dump(mode="json")
+    row.summary_text = summary
+    row.summary_check = {
+        "valid": check.valid,
+        "reasons": list(check.reasons),
+        "numeric_tokens_checked": check.numeric_tokens_checked,
+    }
+    db.commit()
+    record_access_log(db, action="generate_report_summary", user_id=user.id)
+    return SummaryResponse(
+        label="AI-generated",
+        summary=summary,
+        valid=check.valid,
+        checked_numeric_tokens=check.numeric_tokens_checked,
+        reasons=list(check.reasons),
+    )
