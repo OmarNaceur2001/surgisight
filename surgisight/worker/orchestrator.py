@@ -237,7 +237,7 @@ class PipelineOrchestrator:
             self.db.flush()
 
             # Index into relational tables
-            DatabaseService.populate_run_indices(self.db, run.id, report)
+            DatabaseService.populate_run_indices(self.db, run.id, report, tool_predictions=tool_preds)
 
             # Stage Complete
             run.status = RunStatus.COMPLETED.value

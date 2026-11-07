@@ -182,6 +182,12 @@ def get_video_details(
     if not video:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found.")
 
+    record_access_log(
+        db,
+        action="read_video_details",
+        user_id=current_user.id,
+        video_id=video.id,
+    )
     token = generate_signed_media_token(video_id=video.id, user_id=current_user.id)
     return VideoResponse(
         id=video.id,
