@@ -30,7 +30,7 @@ from reportlab.platypus import (
 )
 
 from surgisight.contract.models import Report
-from surgisight.contract.types import RESEARCH_DISCLAIMER
+from surgisight.analytics.lexicon import validate_object_lexicon
 from surgisight.report.chart import render_timeline_chart
 from surgisight.report.renderer import ReportRenderer
 
@@ -101,6 +101,9 @@ class ReportLabPdfRenderer(ReportRenderer):
 
     def render_pdf(self, report: Report, output_path: str | Path | None = None) -> bytes:
         """Render report into PDF binary bytes."""
+        # The PDF is rendered only from a validated Report object. The export service
+        # reconstructs this object from the persisted report.json before calling us.
+        validate_object_lexicon(report.model_dump(), path="report")
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
             buffer,
@@ -391,6 +394,7 @@ class ReportLabPdfRenderer(ReportRenderer):
         def canvas_maker(*args, **kwargs):
             c = NumberedCanvas(*args, **kwargs)
             c.report_status_text = report.status.value
+            c.report_disclaimer_text = report.disclaimer
             return c
 
         doc.build(story, canvasmaker=canvas_maker)
