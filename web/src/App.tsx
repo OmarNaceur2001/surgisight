@@ -439,6 +439,77 @@ function App() {
     }
   };
 
+  useEffect(() => () => {
+    replaySocketRef.current?.close();
+  }, []);
+
+  const loadCohort = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const response = await api<{ items: CohortStat[] }>("/analytics/cohort", token);
+      setCohortStats(response.items);
+      setShowCohort(true);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Cohort summary could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startLiveReplay = () => {
+    if (!token || !selectedRun) return;
+    replaySocketRef.current?.close();
+    setReplayStatus("connecting");
+    setStreamRecord(null);
+    setReplayMetrics(null);
+    const apiUrl = new URL(API_BASE);
+    apiUrl.protocol = apiUrl.protocol === "https:" ? "wss:" : "ws:";
+    apiUrl.pathname = "/ws/replay/" + encodeURIComponent(selectedRun.id);
+    apiUrl.search = "";
+    const socket = new WebSocket(apiUrl.toString());
+    replaySocketRef.current = socket;
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ token }));
+      setReplayStatus("replaying");
+      void videoRef.current?.play().catch(() => undefined);
+    };
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(String(event.data)) as {
+          type?: string;
+          record?: StreamRecord;
+          latency_ms?: { p50: number; p95: number };
+          model_version?: string;
+          model_mode?: string;
+          detail?: string;
+        };
+        if (message.type === "per_second_record" && message.record) {
+          setStreamRecord(message.record);
+        } else if (message.type === "replay_complete" && message.latency_ms) {
+          setReplayMetrics({
+            p50: message.latency_ms.p50,
+            p95: message.latency_ms.p95,
+            model_version: message.model_version ?? "Not recorded",
+            model_mode: message.model_mode ?? "unknown",
+          });
+          setReplayStatus("complete");
+        } else if (message.type === "replay_error") {
+          setNotice(message.detail ?? "Replay could not be completed.");
+          setReplayStatus("disconnected");
+        }
+      } catch {
+        setNotice("The replay service returned an unreadable message.");
+      }
+    };
+    socket.onerror = () => {
+      setNotice("The WebSocket replay connection could not be established.");
+      setReplayStatus("disconnected");
+    };
+    socket.onclose = () => {
+      setReplayStatus((current) => current === "complete" ? current : "disconnected");
+    };
+  };
   const seekTo = (seconds: number) => {
     if (videoRef.current) videoRef.current.currentTime = seconds;
   };
