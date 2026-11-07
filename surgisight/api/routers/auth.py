@@ -141,6 +141,19 @@ def refresh(
     )
 
 
+@router.post("/logout")
+def logout(response: Response) -> dict[str, str]:
+    """Clear the HttpOnly refresh cookie from the browser."""
+    response.delete_cookie(
+        key="refresh_token",
+        path="/auth/refresh",
+        httponly=True,
+        secure=settings.refresh_cookie_secure,
+        samesite="lax",
+    )
+    return {"status": "signed_out"}
+
+
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: Annotated[UserModel, Depends(get_current_user)]) -> UserResponse:
     """Return profile of currently authenticated user."""
