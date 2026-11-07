@@ -10,7 +10,7 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$Ro
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$Root'; .venv\Scripts\python.exe -m surgisight.worker"
 
 # Frontend
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$Root\web'; npm run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "Set-Location '$Root\web'; npm run dev -- --host localhost"
 
 Write-Host "API  -> http://127.0.0.1:8000/api/docs" -ForegroundColor Green
 Write-Host "Web  -> http://localhost:5173" -ForegroundColor Green
