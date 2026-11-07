@@ -356,3 +356,10 @@ def test_create_user_service(monkeypatch, auth_db: Session) -> None:
     # Invalid role rejected
     with pytest.raises(ValueError, match="Invalid role"):
         cu_mod.create_user(email="other@doc.org", password="pwd", role="superman")
+
+
+def test_refresh_requires_httponly_cookie(client: TestClient) -> None:
+    """Refresh endpoint refuses a refresh token supplied in a JSON body or omitted."""
+    response = client.post("/auth/refresh", json={"refresh_token": "not-a-cookie"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Missing refresh cookie."
