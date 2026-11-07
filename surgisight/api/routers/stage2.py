@@ -5,15 +5,15 @@ from __future__ import annotations
 import asyncio
 import time
 from pathlib import Path
-from statistics import median
-from typing import Any
+from typing import Annotated, Any
 
 import numpy as np
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from surgisight.api.auth import decode_token
+from surgisight.api.deps import get_current_user, record_access_log
 from surgisight.analytics.lexicon import validate_object_lexicon
 from surgisight.contract.models import (
     PerSecondRecord,
@@ -29,9 +29,9 @@ from surgisight.db import (
     AnalysisRunModel,
     CohortStatsModel,
     ReportModel,
-    SyncSessionLocal,
     UserModel,
     VideoModel,
+    get_db,
 )
 from surgisight.models.m2_phase.online import OnlinePhasePipeline
 from surgisight.models.m2_phase.real_provider import RealPhaseProvider
@@ -196,45 +196,54 @@ async def replay_session(websocket: WebSocket, session_id: str) -> None:
 
 
 @router.get("/reports/{report_id}/summary")
-def get_grounded_summary(report_id: str) -> dict[str, object]:
+def get_grounded_summary(
+    report_id: str,
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[UserModel, Depends(get_current_user)],
+) -> dict[str, object]:
     """Build and fact-check an AI-generated summary exclusively from persisted report JSON."""
-    with SyncSessionLocal() as db:
-        row = db.execute(select(ReportModel).where(ReportModel.id == report_id)).scalar_one_or_none()
-        if row is None:
-            return {"detail": "Report not found."}
-        report = Report.model_validate(row.report_json)
-        validate_object_lexicon(report.model_dump(), path="report.json")
-        summary = generate_grounded_summary(report)
-        check = check_grounded_summary(summary, report)
-        if not check.accepted:
-            return {"label": "AI-generated", "summary": None, "accepted": False, "reason": check.reason}
-        return {
-            "label": "AI-generated",
-            "summary": summary,
-            "accepted": True,
-            "source": "persisted report.json",
-        }
+    row = db.execute(select(ReportModel).where(ReportModel.id == report_id)).scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Report not found.")
+    run = db.execute(select(AnalysisRunModel).where(AnalysisRunModel.id == row.run_id)).scalar_one()
+    report = Report.model_validate(row.report_json)
+    validate_object_lexicon(report.model_dump(), path="report.json")
+    summary = generate_grounded_summary(report)
+    check = check_grounded_summary(summary, report)
+    record_access_log(db, action="read_grounded_summary", user_id=user.id, video_id=run.video_id)
+    if not check.accepted:
+        return {"label": "AI-generated", "summary": None, "accepted": False, "reason": check.reason}
+    return {
+        "label": "AI-generated",
+        "summary": summary,
+        "accepted": True,
+        "source": "persisted report.json",
+    }
 
 
 @router.get("/analytics/cohort")
-def get_cohort_statistics(version: str | None = None) -> dict[str, object]:
+def get_cohort_statistics(
+    db: Annotated[Session, Depends(get_db)],
+    user: Annotated[UserModel, Depends(get_current_user)],
+    version: str | None = None,
+) -> dict[str, object]:
     """Read-only cohort statistics view; no surgeon-level ranking is produced."""
-    with SyncSessionLocal() as db:
-        statement = select(CohortStatsModel).order_by(
-            CohortStatsModel.version, CohortStatsModel.phase, CohortStatsModel.statistic
-        )
-        if version:
-            statement = statement.where(CohortStatsModel.version == version)
-        rows = db.execute(statement).scalars().all()
-        return {
-            "items": [
-                {
-                    "version": item.version,
-                    "phase": item.phase,
-                    "statistic": item.statistic,
-                    "value": item.value,
-                    "n_videos": item.n_videos,
-                }
-                for item in rows
-            ]
-        }
+    statement = select(CohortStatsModel).order_by(
+        CohortStatsModel.version, CohortStatsModel.phase, CohortStatsModel.statistic
+    )
+    if version:
+        statement = statement.where(CohortStatsModel.version == version)
+    rows = db.execute(statement).scalars().all()
+    record_access_log(db, action="read_cohort_statistics", user_id=user.id)
+    return {
+        "items": [
+            {
+                "version": item.version,
+                "phase": item.phase,
+                "statistic": item.statistic,
+                "value": item.value,
+                "n_videos": item.n_videos,
+            }
+            for item in rows
+        ]
+    }
