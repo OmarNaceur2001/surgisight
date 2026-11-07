@@ -1,0 +1,37 @@
+# SurgiSight Wording Lexicon
+# Non-negotiable principle P3: "Describe, never judge"
+# All generated text, reports, templates, and UI strings must conform to this lexicon.
+
+version: "1.0"
+
+# Strictly prohibited terms. Any occurrence in reports or generated text triggers test failure.
+forbidden_words:
+  - "error"
+  - "errors"
+  - "mistake"
+  - "mistakes"
+  - "bad"
+  - "poor"
+  - "poorly"
+  - "wrong"
+  - "fault"
+  - "faulty"
+  - "failure"
+  - "failures"
+  - "complication"
+  - "complications"
+  - "competent"
+  - "incompetent"
+  - "skilled"
+  - "unskilled"
+  - "clumsy"
+  - "negligent"
+  - "grade"
+  - "score"
+
+# Mandatory neutral wording patterns
+approved_phrasings:
+  cohort_deviation: "outside the observed range of the reference cohort"
+  confidence_flag: "requires expert clinical review due to lower model confidence"
+  discrepancy_flag: "signal discrepancy detected between tool presence and phase classification"
+  research_notice: "Research prototype — not for clinical use"
