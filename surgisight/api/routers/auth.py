@@ -40,10 +40,6 @@ class TokenResponse(BaseModel):
     expires_in: int
 
 
-class RefreshRequest(BaseModel):
-    refresh_token: str | None = None
-
-
 class RefreshResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -117,11 +113,10 @@ def login(
 def refresh(
     response: Response,
     db: Annotated[Session, Depends(get_db)],
-    req: RefreshRequest | None = None,
     refresh_cookie: Annotated[str | None, Cookie(alias="refresh_token")] = None,
 ) -> RefreshResponse:
-    """Issue a new access token using the HttpOnly refresh cookie."""
-    refresh_token = refresh_cookie or (req.refresh_token if req else None)
+    """Issue a new access token using only the HttpOnly refresh cookie."""
+    refresh_token = refresh_cookie
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
