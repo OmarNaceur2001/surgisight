@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_expire_minutes: int = 15
     jwt_refresh_expire_days: int = 7
+    cookie_secure: bool = False
 
     # ------------------------------------------------------------------
     # Storage

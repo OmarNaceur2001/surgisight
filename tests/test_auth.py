@@ -355,3 +355,26 @@ def test_create_user_service(monkeypatch, auth_db: Session) -> None:
     # Invalid role rejected
     with pytest.raises(ValueError, match="Invalid role"):
         cu_mod.create_user(email="other@doc.org", password="pwd", role="superman")
+
+
+
+def test_logout_clears_http_only_refresh_cookie(client: TestClient, auth_db: Session) -> None:
+    """Refresh token is delivered in an HttpOnly cookie and can be cleared."""
+    login_rate_limiter.reset()
+    user = UserModel(
+        email="logout@test.org",
+        password_hash=hash_password("SecureTestPassword"),
+        role="viewer",
+        is_active=True,
+    )
+    auth_db.add(user)
+    auth_db.commit()
+    response = client.post(
+        "/auth/login",
+        json={"email": user.email, "password": "SecureTestPassword"},
+    )
+    assert response.status_code == 200
+    assert client.cookies.get("refresh_token")
+    logout = client.post("/auth/logout")
+    assert logout.status_code == 204
+    assert client.cookies.get("refresh_token") is None
