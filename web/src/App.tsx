@@ -201,14 +201,6 @@ function App() {
     }
   }
 
-  async function refreshSelected() {
-    if (!selected) return;
-    await loadLibrary();
-    const refreshed = await apiRequest<LibraryResponse>("/videos");
-    const item = refreshed.items.find(row => row.id === selected.id);
-    if (item) await selectVideo(item);
-  }
-
   async function saveCorrection(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected || !report) return;
