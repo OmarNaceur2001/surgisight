@@ -62,6 +62,8 @@ type Analysis = {
   report_id?: string | null;
 };
 type Detection = { t: number; tool: string; score: number; track_id: number; x1: number; y1: number; x2: number; y2: number };
+type StreamRecord = { t: number; phase: { label: string; probs: number[] }; tools: { probs: Record<string, number> } };
+type CohortStat = { version: string; phase: string | null; statistic: string; value: number; n_videos: number };
 
 async function api<T>(path: string, token: string | null, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
@@ -172,6 +174,12 @@ function App() {
   const [selectedRun, setSelectedRun] = useState<Analysis | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [detections, setDetections] = useState<Detection[]>([]);
+  const [replayStatus, setReplayStatus] = useState<"idle" | "connecting" | "replaying" | "complete" | "disconnected">("idle");
+  const [streamRecord, setStreamRecord] = useState<StreamRecord | null>(null);
+  const [replayMetrics, setReplayMetrics] = useState<{ p50: number; p95: number; model_version: string; model_mode: string } | null>(null);
+  const [cohortStats, setCohortStats] = useState<CohortStat[]>([]);
+  const [showCohort, setShowCohort] = useState(false);
+  const replaySocketRef = useRef<WebSocket | null>(null);
   const [page, setPage] = useState<"library" | "review">("library");
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
