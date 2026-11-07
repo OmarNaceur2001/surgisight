@@ -15,10 +15,11 @@ from surgisight.api.deps import record_access_log
 from surgisight.contract.models import StreamMessage
 from surgisight.data.video import extract_frames
 from surgisight.models.m2_phase.real_provider import RealPhaseProvider
-from surgisight.settings import settings
-from surgisight.worker.streaming import iter_online_replay
 from surgisight.db import AnalysisRunModel, UserModel, get_db
+from surgisight.models.m2_phase.real_provider import RealPhaseProvider
+from surgisight.settings import settings
 from surgisight.worker.replay import iter_per_second_records
+from surgisight.worker.streaming import iter_online_replay
 
 router = APIRouter(prefix="/ws", tags=["replay"])
 
