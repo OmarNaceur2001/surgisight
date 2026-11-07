@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from surgisight.contract.mock_generator import generate_mock_analysis
-
 from surgisight.contract.models import Report
 from surgisight.report.export import export_report
 
