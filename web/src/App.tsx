@@ -19,6 +19,8 @@ import "./App.css";
 type View = "library" | "upload" | "review";
 type ReplayRecord = { record: { t: number; phase: { label: string; probs: Record<string, number> }; tools: { probs: Record<string, number> } }; latency_ms: number };
 type LibraryResponse = { items: LibraryVideo[]; total: number };
+type CohortResponse = { items: { version: string; phase: string | null; statistic: string; value: number; n_videos: number }[] };
+type LatencyResponse = { stages: Record<string, { count: number; p50_ms: number; p95_ms: number; max_ms: number }> };
 type CorrectionPayload = {
   target_type: string; target_ref: string; before: Record<string, unknown>;
   after: Record<string, unknown>; reason: string;
@@ -84,6 +86,8 @@ function App() {
   const [correctionAfter, setCorrectionAfter] = useState("");
   const [correctionReason, setCorrectionReason] = useState("");
   const [latestRecord, setLatestRecord] = useState<ReplayRecord | null>(null);
+  const [cohortStats, setCohortStats] = useState<CohortResponse["items"]>([]);
+  const [latencyStages, setLatencyStages] = useState<LatencyResponse["stages"]>({});
   const [replaying, setReplaying] = useState(false);
   const [socketState, setSocketState] = useState("idle");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -228,6 +232,44 @@ function App() {
     }
   }
 
+  async function generateSummary() {
+    const reportId = selected?.report_id ?? analysis?.report_id;
+    if (!reportId) return;
+    setBusy(true);
+    try {
+      const result = await apiRequest<{ summary: string; valid: boolean }>(
+        `/reports/${reportId}/summary`,
+        { method: "POST" },
+      );
+      if (result.valid) {
+        setReport(current => current ? { ...current, summary: result.summary } : current);
+        setMessage(s.summarySaved);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : s.error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadCohort() {
+    try {
+      const result = await apiRequest<CohortResponse>("/cohort/stats");
+      setCohortStats(result.items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : s.error);
+    }
+  }
+
+  async function loadLatency() {
+    try {
+      const result = await apiRequest<LatencyResponse>("/metrics/latency");
+      setLatencyStages(result.stages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : s.error);
+    }
+  }
+
   async function markReviewed() {
     const reportId = selected?.report_id ?? analysis?.report_id;
     if (!reportId) return;
@@ -259,7 +301,7 @@ function App() {
     }
   }
 
-  function startReplay() {
+  function startReplay(mode: "saved" | "live" = "saved") {
     if (!analysis?.id) return;
     const base = new URL(apiBaseUrl());
     base.protocol = base.protocol === "https:" ? "wss:" : "ws:";
@@ -271,7 +313,7 @@ function App() {
     setSocketState("connecting");
     socket.onopen = () => {
       setSocketState("streaming");
-      socket.send(JSON.stringify({ type: "auth", access_token: getAccessToken() ?? "", speed: 4 }));
+      socket.send(JSON.stringify({ type: "auth", access_token: getAccessToken() ?? "", speed: 4, mode }));
     };
     socket.onmessage = event => {
       try {
@@ -380,7 +422,7 @@ function App() {
               {!selected ? <div className="panel empty-state tall">{s.selectVideo}</div> : <>
                 <div className="review-main">
                   <section className="panel media-panel">
-                    <div className="panel-heading"><div><strong>{selected.global_video_id}</strong><small>{details ? formatDuration(details.duration_s) : s.loading}</small></div><div className="media-actions">{analysis && !replaying && <button className="secondary" onClick={startReplay}>{s.replay}</button>}{replaying && <button className="secondary" onClick={stopReplay}>{s.stopReplay}</button>}</div></div>
+                    <div className="panel-heading"><div><strong>{selected.global_video_id}</strong><small>{details ? formatDuration(details.duration_s) : s.loading}</small></div><div className="media-actions">{analysis && !replaying && <><button className="secondary" onClick={() => startReplay("saved")}>{s.replay}</button><button className="secondary" onClick={() => startReplay("live")}>{s.liveM2Replay}</button></>}{replaying && <button className="secondary" onClick={stopReplay}>{s.stopReplay}</button>}</div></div>
                     <video ref={videoRef} controls preload="metadata" src={details?.media_url} />
                     {latestRecord && <div className="stream-status"><span className="live-dot" /> Replay {socketState} · {latestRecord.record.phase.label} · t={latestRecord.record.t.toFixed(0)}s · {latestRecord.latency_ms.toFixed(2)} ms record packaging</div>}
                   </section>
@@ -400,7 +442,11 @@ function App() {
                       <div className="panel-heading"><strong>{s.keyEvents}</strong><small>Timeline references</small></div>
                       {report.events.length ? <div className="event-list">{report.events.map((event,i) => <button className="event-row" key={`${event.type}-${i}`} onClick={() => { if (videoRef.current) videoRef.current.currentTime = event.t; }}><span className="event-time">{formatDuration(event.t)}</span><span>{event.type.replaceAll("_"," ")}</span><span className={event.uncertain ? "uncertain-chip" : "confidence-chip"}>{event.uncertain ? s.uncertain : confidenceLabel(event.conf)}</span></button>)}</div> : <p className="muted pad">No events are listed in this report.</p>}
                     </section>
-                    {report.summary && <section className="panel"><div className="panel-heading"><strong>AI-generated summary</strong></div><p>{report.summary}</p></section>}
+                    <section className="panel">
+                      <div className="panel-heading"><strong>{s.summaryTitle}</strong><small>{s.summarySource}</small></div>
+                      {report.summary ? <p>{report.summary}</p> : <p className="muted">{s.noSummary}</p>}
+                      {report.status !== "REVIEWED" && <button className="secondary" onClick={generateSummary} disabled={busy}>{s.generateSummary}</button>}
+                    </section>
                     <section className="panel">
                       <div className="panel-heading"><strong>{s.corrections}</strong><small>Proposals are stored as append-only entries</small></div>
                       {report.status !== "REVIEWED" && canResearch && <form className="correction-form" onSubmit={saveCorrection}>
@@ -419,7 +465,9 @@ function App() {
                   <div className="panel side-card"><div className="panel-heading"><strong>Video metadata</strong></div><dl className="facts stacked"><div><dt>Duration</dt><dd>{details ? formatDuration(details.duration_s) : "—"}</dd></div><div><dt>Frame rate</dt><dd>{details?.fps ?? "—"}</dd></div><div><dt>Crop offset</dt><dd>{details?.crop_offset.join(", ") ?? "—"}</dd></div><div><dt>Dataset</dt><dd>{details?.dataset ?? selected.dataset}</dd></div></dl></div>
                   <div className="panel side-card"><div className="panel-heading"><strong>{s.model}</strong></div>{report ? Object.entries(report.models).map(([name,version]) => <div className="model-row" key={name}><span>{name}</span><small>{version}</small></div>) : <p className="muted">Model metadata is not available yet.</p>}</div>
                   <div className="panel side-card"><div className="panel-heading"><strong>Confidence notes</strong></div>{report?.confidence_notes.length ? report.confidence_notes.map((note,i) => <p className="note" key={i}>{note}</p>) : <p className="muted">No confidence notes.</p>}</div>
-                  <div className="panel side-card"><div className="panel-heading"><strong>Replay monitor</strong><span className="status-badge">{socketState}</span></div><p className="muted">Replay uses the same 1 Hz contract stream as saved analysis.</p>{latestRecord && <><strong>{latestRecord.record.phase.label}</strong><small>Time {latestRecord.record.t.toFixed(1)} s</small></>}</div>
+                  <div className="panel side-card"><div className="panel-heading"><strong>Replay monitor</strong><span className="status-badge">{socketState}</span></div><p className="muted">{s.savedReplayDescription}</p>{latestRecord && <><strong>{latestRecord.record.phase.label}</strong><small>Time {latestRecord.record.t.toFixed(1)} s · {latestRecord.latency_ms.toFixed(2)} ms step</small></>}</div>
+                  <div className="panel side-card"><div className="panel-heading"><strong>{s.cohort}</strong></div><button className="secondary wide" onClick={loadCohort}>{s.loadCohort}</button>{cohortStats.length ? cohortStats.map((row,i) => <div className="model-row" key={`${row.version}-${row.phase}-${row.statistic}-${i}`}><span>{row.phase ?? "All phases"} · {row.statistic}</span><small>{row.value} · n={row.n_videos}</small></div>) : <p className="muted">{s.noCohort}</p>}</div>
+                  <div className="panel side-card"><div className="panel-heading"><strong>{s.latency}</strong></div><button className="secondary wide" onClick={loadLatency}>{s.refreshMetrics}</button>{Object.entries(latencyStages).map(([stage,metric]) => <div className="model-row" key={stage}><span>{stage}</span><small>{metric.p50_ms} / {metric.p95_ms} ms · n={metric.count}</small></div>)}</div>
                 </aside>
               </>}
             </section>
