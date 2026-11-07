@@ -5,7 +5,6 @@ import re
 import subprocess
 from pathlib import Path
 
-
 FORBIDDEN_SUFFIXES = {
     ".mp4", ".avi", ".mkv", ".mov", ".webm", ".zip", ".tar", ".gz",
     ".rar", ".7z", ".pt", ".pth", ".npy", ".npz", ".h5", ".hdf5",
