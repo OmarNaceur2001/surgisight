@@ -1,5 +1,6 @@
 """Synthetic 90-minute online M2 memory/throughput harness."""
 from __future__ import annotations
+
 import argparse
 import ctypes
 import os
@@ -23,6 +24,7 @@ def create_pipeline(max_buffer_size: int) -> Any:
         max_buffer_size=max_buffer_size,
     )
 
+
 def process_rss_bytes() -> int:
     """Return current process RSS using Windows API or Linux procfs."""
     if os.name == "nt":
@@ -44,6 +46,7 @@ def process_rss_bytes() -> int:
     statm = Path("/proc/self/statm").read_text(encoding="ascii").split()
     return int(statm[1]) * os.sysconf("SC_PAGE_SIZE")
 
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seconds", type=int, default=5400)
@@ -56,7 +59,7 @@ def main() -> int:
         parser.error("seconds must exceed warmup; warmup and max-buffer must be positive")
     rng = np.random.default_rng(2026)
     frame = rng.integers(0, 256, size=(224, 224, 3), dtype=np.uint8)
-    pipeline = OnlinePhasePipeline(config={"feature_dim": 64, "temporal_decay": 0.85}, max_buffer_size=args.max_buffer)
+    pipeline = create_pipeline(args.max_buffer)
     started = time.perf_counter()
     for index in range(args.warmup):
         pipeline.step(frame, t=float(index), frame_idx=index * 25)

@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+
 def main() -> int:
     report_path = Path(sys.argv[1] if len(sys.argv) > 1 else "coverage.json")
     if not report_path.is_file():

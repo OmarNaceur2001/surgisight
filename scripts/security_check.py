@@ -5,6 +5,7 @@ import re
 import subprocess
 from pathlib import Path
 
+
 FORBIDDEN_SUFFIXES = {
     ".mp4", ".avi", ".mkv", ".mov", ".webm", ".zip", ".tar", ".gz",
     ".rar", ".7z", ".pt", ".pth", ".npy", ".npz", ".h5", ".hdf5",
@@ -26,10 +27,12 @@ TEXT_SUFFIXES = {
     ".html", ".txt", ".psm1",
 }
 
+
 def tracked_paths() -> list[Path]:
     """Return tracked repository paths from Git's index."""
     result = subprocess.run(["git", "ls-files", "-z"], check=True, capture_output=True)
     return [Path(item.decode("utf-8", errors="replace")) for item in result.stdout.split(b"\0") if item]
+
 
 def main() -> int:
     failures: list[str] = []
