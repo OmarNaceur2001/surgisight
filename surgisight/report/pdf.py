@@ -29,8 +29,8 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from surgisight.contract.models import Report
 from surgisight.analytics.lexicon import validate_object_lexicon
+from surgisight.contract.models import Report
 from surgisight.report.chart import render_timeline_chart
 from surgisight.report.renderer import ReportRenderer
 
@@ -63,7 +63,7 @@ class NumberedCanvas(canvas.Canvas):
         self.drawString(
             36,
             756,
-            "Research prototype — not for clinical use",
+            getattr(self, "report_disclaimer_text", "Research prototype — not for clinical use"),
         )
 
         # Header: Review Status (P6)
@@ -90,7 +90,7 @@ class NumberedCanvas(canvas.Canvas):
         self.drawString(
             36,
             30,
-            "Research prototype — not for clinical use | SurgiSight v1.0",
+            f"{getattr(self, 'report_disclaimer_text', 'Research prototype — not for clinical use')} | SurgiSight v1.0",
         )
         self.drawRightString(576, 30, f"Page {self._pageNumber} of {page_count}")
         self.restoreState()
@@ -202,7 +202,7 @@ class ReportLabPdfRenderer(ReportRenderer):
             [
                 [
                     Paragraph(
-                        f"<b>RESEARCH NOTICE (NON-CLINICAL USE):</b> {RESEARCH_DISCLAIMER}",
+                        f"<b>RESEARCH NOTICE (NON-CLINICAL USE):</b> {report.disclaimer}",
                         disclaimer_style,
                     )
                 ]
