@@ -5,9 +5,16 @@ Research prototype — not for clinical use.
 
 from __future__ import annotations
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from typing import Annotated
 
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+
+from surgisight.api.deps import record_access_log, require_roles
+from surgisight.api.routers import auth
+from surgisight.contract.types import UserRole
+from surgisight.db import UserModel, get_db
 from surgisight.settings import settings
 
 app = FastAPI(
@@ -28,6 +35,9 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 
+# Mount Routers
+app.include_router(auth.router)
+
 
 @app.get("/health", tags=["ops"])
 def health() -> dict[str, str]:
@@ -43,7 +53,6 @@ def health() -> dict[str, str]:
 async def health_db() -> dict[str, str]:
     """Database connectivity probe."""
     try:
-        # Lazy import to avoid loading DB on simple health checks
         from sqlalchemy import text
         from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -54,3 +63,33 @@ async def health_db() -> dict[str, str]:
         return {"status": "ok", "database": "reachable"}
     except Exception as exc:  # noqa: BLE001
         return {"status": "degraded", "database": "unreachable", "detail": str(exc)}
+
+
+# Protected route stubs for role matrix verification and audit logging (P6, P7)
+@app.get("/test/reviewer-only", tags=["test"])
+def test_reviewer_endpoint(
+    user: Annotated[UserModel, Depends(require_roles(UserRole.REVIEWER))],
+    db: Annotated[Session, Depends(get_db)],
+) -> dict[str, str]:
+    record_access_log(db, action="review_access", user_id=user.id)
+    return {"message": "reviewed_granted", "user": user.email}
+
+
+@app.get("/test/researcher-only", tags=["test"])
+def test_researcher_endpoint(
+    user: Annotated[UserModel, Depends(require_roles(UserRole.RESEARCHER, UserRole.REVIEWER))],
+    db: Annotated[Session, Depends(get_db)],
+) -> dict[str, str]:
+    record_access_log(db, action="research_access", user_id=user.id)
+    return {"message": "research_granted", "user": user.email}
+
+
+@app.get("/test/viewer-only", tags=["test"])
+def test_viewer_endpoint(
+    user: Annotated[
+        UserModel, Depends(require_roles(UserRole.VIEWER, UserRole.RESEARCHER, UserRole.REVIEWER))
+    ],
+    db: Annotated[Session, Depends(get_db)],
+) -> dict[str, str]:
+    record_access_log(db, action="view_access", user_id=user.id)
+    return {"message": "view_granted", "user": user.email}
