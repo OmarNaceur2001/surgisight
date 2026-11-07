@@ -207,11 +207,13 @@ def test_login_success_and_refresh_flow(client: TestClient, auth_db: Session) ->
     assert login_res.status_code == 200
     data = login_res.json()
     assert "access_token" in data
-    assert "refresh_token" in data
+    assert "refresh_token" not in data
+    assert client.cookies.get("refresh_token")
+    set_cookie = login_res.headers.get("set-cookie", "").lower()
+    assert "httponly" in set_cookie
     assert data["token_type"] == "bearer"
 
     access_token = data["access_token"]
-    refresh_token = data["refresh_token"]
 
     # 2. Get profile /auth/me
     me_res = client.get("/auth/me", headers={"Authorization": f"Bearer {access_token}"})
@@ -221,7 +223,7 @@ def test_login_success_and_refresh_flow(client: TestClient, auth_db: Session) ->
     assert me_data["role"] == "reviewer"
 
     # 3. Refresh access token
-    ref_res = client.post("/auth/refresh", json={"refresh_token": refresh_token})
+    ref_res = client.post("/auth/refresh")
     assert ref_res.status_code == 200
     ref_data = ref_res.json()
     assert "access_token" in ref_data
@@ -355,3 +357,26 @@ def test_create_user_service(monkeypatch, auth_db: Session) -> None:
     # Invalid role rejected
     with pytest.raises(ValueError, match="Invalid role"):
         cu_mod.create_user(email="other@doc.org", password="pwd", role="superman")
+
+
+
+def test_logout_clears_http_only_refresh_cookie(client: TestClient, auth_db: Session) -> None:
+    """Refresh token is delivered in an HttpOnly cookie and can be cleared."""
+    login_rate_limiter.reset()
+    user = UserModel(
+        email="logout@test.org",
+        password_hash=hash_password("SecureTestPassword"),
+        role="viewer",
+        is_active=True,
+    )
+    auth_db.add(user)
+    auth_db.commit()
+    response = client.post(
+        "/auth/login",
+        json={"email": user.email, "password": "SecureTestPassword"},
+    )
+    assert response.status_code == 200
+    assert client.cookies.get("refresh_token")
+    logout = client.post("/auth/logout")
+    assert logout.status_code == 204
+    assert client.cookies.get("refresh_token") is None

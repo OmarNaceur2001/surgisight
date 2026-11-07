@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,13 +36,8 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
     expires_in: int
-
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
 
 
 class RefreshResponse(BaseModel):
@@ -63,6 +58,7 @@ class UserResponse(BaseModel):
 def login(
     req: LoginRequest,
     request: Request,
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
 ) -> TokenResponse:
     """Authenticate user with email and password, issuing access and refresh tokens."""
@@ -96,10 +92,18 @@ def login(
 
     access_token = create_access_token(user_id=user.id, role=user.role)
     refresh_token = create_refresh_token(user_id=user.id)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="strict",
+        path="/auth",
+        max_age=settings.jwt_refresh_expire_days * 24 * 60 * 60,
+    )
 
     return TokenResponse(
         access_token=access_token,
-        refresh_token=refresh_token,
         token_type="bearer",
         expires_in=settings.jwt_access_expire_minutes * 60,
     )
@@ -107,12 +111,19 @@ def login(
 
 @router.post("/refresh", response_model=RefreshResponse)
 def refresh(
-    req: RefreshRequest,
+    response: Response,
     db: Annotated[Session, Depends(get_db)],
+    refresh_cookie: Annotated[str | None, Cookie(alias="refresh_token")] = None,
 ) -> RefreshResponse:
-    """Issue a new access token using a valid refresh token."""
+    """Issue a new access token using only the HttpOnly refresh cookie."""
+    refresh_token = refresh_cookie
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh cookie is missing",
+        )
     try:
-        payload = decode_token(req.refresh_token, expected_type="refresh")
+        payload = decode_token(refresh_token, expected_type="refresh")
     except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -128,6 +139,16 @@ def refresh(
         )
 
     access_token = create_access_token(user_id=user.id, role=user.role)
+    rotated_refresh = create_refresh_token(user_id=user.id)
+    response.set_cookie(
+        key="refresh_token",
+        value=rotated_refresh,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="strict",
+        path="/auth",
+        max_age=settings.jwt_refresh_expire_days * 24 * 60 * 60,
+    )
     return RefreshResponse(
         access_token=access_token,
         token_type="bearer",
@@ -145,3 +166,12 @@ def get_me(current_user: Annotated[UserModel, Depends(get_current_user)]) -> Use
         is_active=current_user.is_active,
         created_at=current_user.created_at.isoformat(),
     )
+
+
+
+@router.post("/logout", status_code=204)
+def logout(response: Response) -> Response:
+    """Clear the refresh cookie; access tokens expire naturally."""
+    response.delete_cookie(key="refresh_token", path="/auth", httponly=True, secure=settings.cookie_secure, samesite="strict")
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return response
