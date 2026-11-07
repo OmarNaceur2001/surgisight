@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from surgisight.api.deps import record_access_log, require_roles
-from surgisight.api.routers import auth, media, videos
+from surgisight.api.routers import analyses, auth, media, videos
 from surgisight.contract.types import UserRole
 from surgisight.db import UserModel, get_db
 from surgisight.settings import settings
@@ -39,6 +39,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(videos.router)
 app.include_router(media.router)
+app.include_router(analyses.router)
 
 
 @app.get("/health", tags=["ops"])
