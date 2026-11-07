@@ -27,7 +27,7 @@ jobs:
         run: ruff check .
 
       - name: Black check
-        run: black --check .
+        run: black --check --diff .
 
       - name: Mypy (contract, analytics, report)
         run: mypy surgisight/contract surgisight/analytics surgisight/report
