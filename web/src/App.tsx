@@ -561,7 +561,7 @@ function App() {
 
       {page === "library" ? (
         <section className="page-content">
-          <div className="page-heading"><div><p className="eyebrow">VIDEO LIBRARY</p><h1>Research sessions</h1><p className="muted">Find recorded sessions and start a new analysis.</p></div><div className="count-chip">{videos.length} sessions</div></div>
+          <div className="page-heading"><div><p className="eyebrow">VIDEO LIBRARY</p><h1>Research sessions</h1><p className="muted">Find recorded sessions and start a new analysis.</p></div><div className="page-heading-actions"><button className="quiet-button" onClick={() => void loadCohort()} disabled={loading}>Cohort view</button><div className="count-chip">{videos.length} sessions</div></div></div>
           <form className="panel filter-panel" onSubmit={searchLibrary}>
             <label>Phase<select value={queryPhase} onChange={(event) => setQueryPhase(event.target.value)}><option value="">Any phase</option>{["P1","P2","P3","P4","P5","P6","P7"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
             <label>Instrument<select value={queryTool} onChange={(event) => setQueryTool(event.target.value)}><option value="">Any instrument</option>{["Grasper","Bipolar","Hook","Scissors","Clipper","Irrigator","SpecimenBag"].map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -570,6 +570,8 @@ function App() {
             <button className="primary-button" disabled={loading}>Search library</button>
             <button className="quiet-button" type="button" onClick={() => { setQueryPhase(""); setQueryTool(""); setQueryTriplet(""); setQueryEvent(""); void loadLibrary(token); }}>Clear</button>
           </form>
+
+          {showCohort && <section className="panel cohort-panel"><div className="panel-heading"><div><p className="eyebrow">REFERENCE COHORT</p><h2>Cohort statistics</h2></div><button className="quiet-button" onClick={() => setShowCohort(false)}>Hide</button></div>{cohortStats.length ? <div className="cohort-table">{cohortStats.map((item, index) => <div className="cohort-row" key={`${item.version}-${item.phase}-${item.statistic}-${index}`}><strong>{item.phase ?? "All phases"}</strong><span>{item.statistic}</span><b>{item.value.toFixed(2)}</b><small>n = {item.n_videos} videos · {item.version}</small></div>)}</div> : <p className="muted">No cohort statistics are registered yet.</p>}</section>}
 
           <div className="library-grid">
             <section className="panel upload-panel">
@@ -600,7 +602,8 @@ function App() {
             <section className="panel video-panel">
               <div className="panel-heading"><div><p className="eyebrow">SYNCHRONIZED PLAYER</p><h2>Recorded procedure</h2></div><span className="status-pill">{selectedRun?.status ?? "No analysis"}</span></div>
               {selectedVideo?.media_url ? <div className="video-frame"><video ref={videoRef} controls preload="metadata" src={selectedVideo.media_url.startsWith("http") ? selectedVideo.media_url : `${API_BASE}${selectedVideo.media_url}`} /><DetectionOverlay videoRef={videoRef} detections={detections} /></div> : <div className="empty-video">Select a session to load its video.</div>}
-              <div className="player-foot"><span>Time-based navigation uses seconds from video start.</span><button className="quiet-button" onClick={() => void refreshAnalysis()} disabled={!selectedRun || loading}>Refresh analysis status</button></div>
+              <div className="player-foot"><span>Time-based navigation uses seconds from video start.</span><div className="player-buttons"><button className="quiet-button" onClick={() => void refreshAnalysis()} disabled={!selectedRun || loading}>Refresh analysis status</button><button className="secondary-button" onClick={startLiveReplay} disabled={!selectedRun || loading || replayStatus === "connecting" || replayStatus === "replaying"}>Start live replay</button></div></div>
+              {replayStatus !== "idle" && <div className="live-replay"><div className="panel-heading"><div><p className="eyebrow">STAGE 2 · WEBSOCKET</p><h2>Live replay</h2></div><span className="status-pill">{replayStatus}</span></div>{streamRecord && <div className="live-current"><span>Current timestamp <strong>{formatDuration(streamRecord.t)}</strong></span><span>Phase <strong>{streamRecord.phase.label}</strong></span><span>Tool signals <strong>{Object.keys(streamRecord.tools.probs).length}</strong></span></div>}{replayMetrics && <div className="latency-metrics"><span>Step p50 <strong>{replayMetrics.p50.toFixed(2)} ms</strong></span><span>Step p95 <strong>{replayMetrics.p95.toFixed(2)} ms</strong></span><span>Model <strong>{replayMetrics.model_mode === "real" ? "Real artifact" : "Untrained demo model"}</strong></span></div>}{replayMetrics && <small className="model-version">{replayMetrics.model_version}</small>}</div>}
               {selectedRun && <div className="run-progress"><div><span>{selectedRun.stage}</span><strong>{Math.round(selectedRun.progress * 100)}%</strong></div><div className="progress-track"><span style={{ width: `${clampPercent(selectedRun.progress * 100)}%` }} /></div><small>Run {selectedRun.id}</small></div>}
             </section>
 
