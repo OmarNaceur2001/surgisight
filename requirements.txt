@@ -22,7 +22,7 @@ psycopg[binary]==3.3.8
 aiosqlite==0.21.0
 
 # Auth — PyJWT replaces python-jose; pwdlib replaces passlib
-PyJWT==2.13.0
+PyJWT==2.15.0
 pwdlib[argon2]==0.2.1
 
 # Data / ML helpers
