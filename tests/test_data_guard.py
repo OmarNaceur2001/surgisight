@@ -53,3 +53,11 @@ def test_guard_rejects_frame_outside_web() -> None:
 
 def test_guard_allows_web_asset() -> None:
     assert _run_guard(["web/src/assets/hero.png"]) == 0
+
+
+def test_guard_rejects_parquet() -> None:
+    assert _run_guard(["predictions.parquet"]) == 1
+
+
+def test_guard_rejects_dataset_manifest_csv() -> None:
+    assert _run_guard(["m2_phase_manifest.csv"]) == 1
