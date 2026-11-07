@@ -145,3 +145,20 @@ def test_prediction_slice_returns_bounded_records(api_client, api_db, tmp_path, 
     assert response.status_code == 200
     assert response.json()["total"] == 3
     assert [r["t"] for r in response.json()["records"]] == [1.0, 2.0]
+
+
+
+def test_tool_interval_hysteresis_uses_1hz_probabilities():
+    """Search indexes are true probability-derived intervals, not cumulative-duration placeholders."""
+    from surgisight.db.service import derive_tool_intervals
+
+    samples = []
+    values = [0.1, 0.7, 0.55, 0.35, 0.45, 0.1]
+    for value in values:
+        probabilities = {tool: 0.0 for tool in TOOL_ORDER}
+        probabilities[TOOL_ORDER[0]] = value
+        samples.append(ToolPresencePrediction(probs=probabilities))
+
+    intervals = derive_tool_intervals(samples)
+    assert intervals["Grasper"] == [(1.0, 3.0)]
+    assert all(intervals[tool.value] == [] for tool in TOOL_ORDER[1:])

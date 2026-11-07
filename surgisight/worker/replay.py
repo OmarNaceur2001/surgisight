@@ -5,7 +5,11 @@ import json
 from collections.abc import Iterator
 
 from surgisight.contract.models import (
-    PerSecondRecord, PhasePrediction, ProducerInfo, ToolPresencePrediction, TripletPrediction
+    PerSecondRecord,
+    PhasePrediction,
+    ProducerInfo,
+    ToolPresencePrediction,
+    TripletPrediction,
 )
 from surgisight.contract.types import PHASE_ORDER, TOOL_ORDER, PhaseId
 from surgisight.worker.storage import read_predictions_parquet

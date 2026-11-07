@@ -10,8 +10,14 @@ from sqlalchemy.orm import Session
 
 from surgisight.api.deps import get_current_user, record_access_log
 from surgisight.db import (
-    AnalysisRunModel, EventModel, PhaseSegmentModel, TripletIndexModel,
-    ToolIntervalModel, UserModel, VideoModel, get_db
+    AnalysisRunModel,
+    EventModel,
+    PhaseSegmentModel,
+    ToolIntervalModel,
+    TripletIndexModel,
+    UserModel,
+    VideoModel,
+    get_db,
 )
 
 router = APIRouter(prefix="/videos", tags=["videos"])
@@ -71,7 +77,7 @@ def list_videos(
             .where(
                 AnalysisRunModel.video_id == VideoModel.id,
                 (TripletIndexModel.ivt_name.ilike(f"%{triplet}%"))
-                | (TripletIndexModel.ivt_id.cast(str) == triplet),
+                | (TripletIndexModel.ivt_id == int(triplet) if triplet.isdigit() else False),
             )
         ))
     if event:
