@@ -75,5 +75,5 @@ source = ["surgisight"]
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.coverage.report]
-fail_under = 0  # will be raised at WP12
+fail_under = 80
 show_missing = true

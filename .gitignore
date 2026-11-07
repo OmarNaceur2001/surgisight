@@ -69,3 +69,10 @@ alembic/versions/*.pyc
 *.db
 *.sqlite
 *.sqlite3
+
+# Coverage/security reports
+coverage.json
+.coverage.*
+*.parquet
+*.arrow
+*.feather

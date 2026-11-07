@@ -19,12 +19,16 @@ function Run-Check {
 Run-Check "Ruff lint" ".venv\Scripts\ruff.exe check ."
 Run-Check "Black check" ".venv\Scripts\black.exe --check ."
 Run-Check "Mypy (contract, analytics, report)" ".venv\Scripts\mypy.exe surgisight/contract surgisight/analytics surgisight/report"
-Run-Check "Pytest" ".venv\Scripts\pytest.exe -q"
+Run-Check "Pytest + coverage" ".venv\Scripts\pytest.exe -q --cov=surgisight --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80"
+Run-Check "Contract and analytics coverage" "python scripts\coverage_gate.py coverage.json"
+Run-Check "Tracked-file security scan" "python scripts\security_check.py"
+Run-Check "Synthetic online smoke harness" "python scripts\performance_harness.py --seconds 30 --warmup 5"
 
 # Frontend checks
 if (Test-Path "web\node_modules") {
     Set-Location web
     Run-Check "npm lint" "npm run lint"
+    Run-Check "npm test" "npm test"
     Run-Check "npm build" "npm run build"
     Set-Location $Root
 } else {

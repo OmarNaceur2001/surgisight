@@ -24,3 +24,6 @@ nbstripout==0.9.1
 
 # Schema export helper
 jsonschema==4.23.0
+
+# Dependency vulnerability audit
+pip-audit>=2.9,<3
