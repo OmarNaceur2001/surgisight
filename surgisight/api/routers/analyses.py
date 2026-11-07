@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import io
 import json
 from datetime import UTC, datetime
 from typing import Annotated, Literal
@@ -19,7 +18,6 @@ from surgisight.api.deps import get_current_user, record_access_log, require_rol
 from surgisight.contract.models import Report
 from surgisight.contract.types import ReportStatus, RunStatus, TargetType, UserRole
 from surgisight.db import (
-    AccessLogModel,
     AnalysisRunModel,
     CorrectionModel,
     EventModel,
@@ -69,7 +67,7 @@ class AnalysisResponse(BaseModel):
 class PredictionPage(BaseModel):
     stream: str
     count: int
-    rows: list[dict]
+    rows: list[dict[str, object]]
 
 
 class CorrectionRequest(BaseModel):
