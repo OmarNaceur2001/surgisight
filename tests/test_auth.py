@@ -363,3 +363,11 @@ def test_refresh_requires_httponly_cookie(client: TestClient) -> None:
     response = client.post("/auth/refresh", json={"refresh_token": "not-a-cookie"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Missing refresh cookie."
+
+
+def test_logout_clears_refresh_cookie(client: TestClient) -> None:
+    """Logout expires the HttpOnly refresh cookie at its scoped path."""
+    response = client.post("/auth/logout")
+    assert response.status_code == 200
+    assert response.json()["status"] == "signed_out"
+    assert "refresh_token" in response.headers.get("set-cookie", "")
