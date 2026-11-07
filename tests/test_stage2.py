@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from surgisight.api.routers.stage2 import prediction_to_record
 from surgisight.contract import generate_mock_analysis
 from surgisight.contract.models import PhaseId, ToolId
 from surgisight.report.summary import check_grounded_summary, generate_grounded_summary
-from surgisight.api.routers.stage2 import prediction_to_record
 
 
 def test_online_prediction_converts_to_contract_record() -> None:
