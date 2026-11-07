@@ -5,8 +5,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+from surgisight.contract.mock_generator import generate_mock_analysis
+
 from surgisight.contract.models import Report
 from surgisight.report.export import export_report
+
+
+@pytest.fixture
+def mock_report() -> Report:
+    """Generate a deterministic mock report; no dataset files are used."""
+    return generate_mock_analysis(duration_minutes=25.0, seed=42).report
 
 
 class CapturingRenderer:
