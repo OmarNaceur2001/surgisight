@@ -16,6 +16,7 @@ pytest-cov==7.1.0
 pytest-mock==3.17.0
 httpx==0.28.1
 hypothesis==6.170.15
+pypdf==7.0.0
 
 # Pre-commit
 pre-commit==4.7.0
